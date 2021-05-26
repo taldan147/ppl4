@@ -2,7 +2,9 @@
 
 import chai, { expect } from 'chai';
 
-import { asycMemo, asyncWaterfallWithRetry, getAll, lazyFilter, lazyMap, makePromisedStore, MISSING_KEY } from '../src/part2';
+// import { asycMemo, asyncWaterfallWithRetry, getAll, lazyFilter, lazyMap, makePromisedStore, MISSING_KEY } from '../src/part2';
+import {asycMemo,getAll, makePromisedStore,asyncWaterfallWithRetry, lazyFilter,lazyMap,MISSING_KEY } from '../src/part2';
+
 
 import chaiAsPromised from 'chai-as-promised'
 
@@ -63,7 +65,7 @@ describe('2.3 (lazy generators)', () => {
 
 describe('2.4 (asyncWaterfallWithRetry)', () => {
     it('executes sequence', async () => {
-        const v = await asyncWaterfallWithRetry([async () => 1, async v => v + 1, async v => v * 2 ])
+        const v  = await asyncWaterfallWithRetry([async () => 1, async v => v + 1, async v => v * 2 ])
         expect(v).to.equal(4)
     })
 
