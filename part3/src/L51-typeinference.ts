@@ -259,7 +259,7 @@ const typeofProgramExps = (exp: A.Exp, exps: A.Exp[], tenv: E.TEnv): Result<T.TE
     isEmpty(exps) ? typeofExp(exp, tenv) :
         //check type of def.val exp, extend env, and check types of exps with extTenv
         A.isDefineExp(exp) ? typeofDefineExp(exp, exps, tenv) :
-            bind(typeofExp(exp, tenv), _ => typeofExps(exps, tenv));
+            bind(typeofExp(exp, tenv), _ => typeofProgramExps(first(exps), rest(exps), tenv));
 
 
 const typeofDefineExp = (exp: A.DefineExp, exps: A.Exp[], tenv: E.TEnv): Result<T.TExp> => {
@@ -297,15 +297,29 @@ export const typeofSet = (exp: A.SetExp, tenv: E.TEnv): Result<T.VoidTExp> => {
 //      type<method_k>(class-tenv) = mk
 // Then type<class(type fields methods)>(tend) = = [t1 * ... * tn -> type]
 export const typeofClass = (exp: A.ClassExp, tenv: E.TEnv): Result<T.TExp> => {
+    const fieldtexp = R.map((field: A.VarDecl) => field.texp, exp.fields);
+    const fieldVar = R.map((field: A.VarDecl) => field.var, exp.fields);
+    const methodtexp = R.map((method: A.Binding) => method.var.texp, exp.methods);
+    const methodvar = R.map((method: A.Binding) => method.var.var, exp.methods);
+    const innitclasstype = T.makeProcTExp(fieldtexp, T.makeClassTExp(exp.typeName.var,R.zipWith((method : string, val : T.TExp) => [method, val],methodvar, methodtexp)))
+    const extendEnv = E.makeExtendTEnv(R.concat(R.concat(fieldVar, methodvar), [exp.typeName.var]), R.concat(R.concat(fieldtexp, methodtexp), [innitclasstype]), tenv);
+    const methodsvalTexp =   mapResult((method: A.Binding) =>typeofExp(method.val, extendEnv), exp.methods);
+    const methodsConstraints = bind(methodsvalTexp, (valTexp : T.TExp[]) =>zipWithResult((method : T.TExp , methodTexp : T.TExp) => checkEqualType(method, methodTexp, exp), valTexp, methodtexp));
+    
+    return bind(methodsvalTexp ,(mvTE ) => bind(methodsConstraints,()=> makeOk(T.makeProcTExp(fieldtexp, T.makeClassTExp(exp.typeName.var,R.zipWith((method : string, val : T.TExp) => [method, val],methodvar, mvTE))))));
+
+};
+
+
     // const fieldtexp = R.map((field: A.VarDecl) => field.texp, exp.fields);
     // const fieldVar = R.map((field: A.VarDecl) => field.var, exp.fields);
-    // const fieldVal = R.map((field: A.VarDecl) => field.var, exp.fields);
     // const methodtexp = R.map((method: A.Binding) => method.var.texp, exp.methods);
     // const methodvar = R.map((method: A.Binding) => method.var.var, exp.methods);
-    // const extendEnv = E.makeExtendTEnv(R.concat(fieldVar, methodvar), R.concat(fieldtexp, methodtexp), tenv);
-    // const fieldConstraint = zipWithResult((fieldTE, val) => bind(typeofExp(val, extendEnv), 
-    //                                                     (valTE : T.TExp) => checkEqualTypes(fieldtexp, valTE, exp)), fieldtexp, );
-    return makeFailure('TODO typeofSet');
-};
+    // const innitclasstype = T.makeProcTExp(fieldtexp, T.makeClassTExp(exp.typeName.var,R.zipWith((method : string, val : T.TExp) => [method, val],methodvar, methodtexp)))
+    // const extendEnv = E.makeExtendTEnv(R.concat(R.concat(fieldVar, methodvar), [exp.typeName.var]), R.concat(R.concat(fieldtexp, methodtexp), [innitclasstype]), tenv);
+    // const methodsvalTexp =   mapResult((method: A.Binding) =>typeofExp(method.val, extendEnv), exp.methods);
+    // const methodsConstraints = bind(methodsvalTexp, (valTexp : T.TExp[]) =>zipWithResult((method : T.TExp , methodTexp : T.TExp) => checkEqualType(method, methodTexp, exp), valTexp, methodtexp));
+    
+    // return bind(methodsvalTexp ,(mvTE ) => bind(methodsConstraints,()=> makeOk(T.makeProcTExp(fieldtexp, T.makeClassTExp(exp.typeName.var,R.zipWith((method : string, val : T.TExp) => [method, val],methodvar, mvTE))))));
 
 

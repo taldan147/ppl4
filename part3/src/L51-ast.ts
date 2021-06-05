@@ -10,9 +10,9 @@ import { Sexp, Token } from 's-expression';
 import { isCompoundSExp, isEmptySExp, isSymbolSExp, makeCompoundSExp, makeEmptySExp, makeSymbolSExp, SExpValue, valueToString } from '../imp/L5-value';
 import { allT, first, rest, second, isEmpty } from '../shared/list';
 import { parse as p, isToken, isSexpString } from "../shared/parser";
-import { Result, bind, makeFailure, mapResult, makeOk, safe2, safe3 } from "../shared/result";
+import { Result, bind, makeFailure, mapResult, makeOk, safe2, safe3, isOk } from "../shared/result";
 import { isArray, isString, isNumericString, isIdentifier } from "../shared/type-predicates";
-import { isTVar, makeFreshTVar, makeTVar, parseTExp, unparseTExp, TVar, TExp } from './TExp51';
+import { isTVar, makeFreshTVar, makeTVar, parseTExp, unparseTExp, TVar, TExp, isTExp } from './TExp51';
 import { makeClassTExp, ClassTExp } from "./TExp51";
 
 /*
@@ -336,9 +336,13 @@ const parseClassExp = (params: Sexp[]): Result<ClassExp> =>
     parseGoodClassExp(params[1], params[2], params[3]);
 
 const parseGoodClassExp = (typeName: Sexp, varDecls: Sexp, bindings: Sexp): Result<ClassExp> =>{
-    if (!isArray(varDecls) || !allT(isVarDecl, varDecls) ){
-        return makeFailure('Invalid vars for classExp');
+    // if (!isArray(varDecls) || !allT(isVarDecl, varDecls) ){
+    //     return makeFailure('Invalid vars for classExp');
+    // }
+    if (!isArray(varDecls)){
+        return makeFailure("");
     }
+    const vard = mapResult(parseVarDecl, varDecls)
     if (!isGoodBindings(bindings)) { // check if its good 
         return makeFailure('Malformed bindings in "class" expression');
     }
@@ -346,7 +350,9 @@ const parseGoodClassExp = (typeName: Sexp, varDecls: Sexp, bindings: Sexp): Resu
     const funcBodies =  mapResult(binding => parseL5CExp(binding[1]), bindings);
     const bindingsFunc = safe2((bodies : CExp[], names : VarDecl[])=> makeOk(zipWith(makeBinding, names, bodies)))(funcBodies, funcNames);
     const classType = parseTExp(typeName);
-    return isTVar(classType)? bind(bindingsFunc,(func)=> makeOk(makeClassExp(classType,varDecls, func))):
+    
+    return isOk(classType) && isTVar(classType.value)? safe2((func : Binding[], vardec : VarDecl[]) => makeOk(makeClassExp(classType.value as TVar,vardec, func)))(bindingsFunc, vard):
+    // return isTVar(classType)? bind(bindingsFunc,(func)=> makeOk(makeClassExp(classType,vard, func))):
     makeFailure("bad typename");
     // if (isTVar(classType)){
     //     return bind(bindingsFunc,(func)=> makeOk(makeClassExp(classType,varDecls, func)))
@@ -471,15 +477,16 @@ export const parsedToClassExps = (p: Parsed): ClassExp[] =>
     []; //never
 
     const findAllClasses = (p : Program) : ClassExp[] => {
-        const defExp = filter((exp) => isDefineExp(exp) && isClassExp(exp.val), p.exps);
-        if (!allT(isDefineExp, defExp)){
-            return [];
-        }
-        const classExp =  map((exp : DefineExp) => exp.val, defExp);
-        if (!allT(isClassExp, classExp)){
-            return []
-        }
-        return classExp;
+        // const defExp = filter((exp) => isDefineExp(exp) && isClassExp(exp.val), p.exps);
+        // if (!allT(isDefineExp, defExp)){
+        //     return [];
+        // }
+        // const classExp =  map((exp : DefineExp) => exp.val, defExp);
+        // if (!allT(isClassExp, classExp)){
+        //     return []
+        // }
+        // return classExp;
+        return map((exp: DefineExp) => exp.val as ClassExp, filter((exp) => isDefineExp(exp) && isClassExp(exp.val), p.exps).map((exp) => exp as DefineExp));
     }
 // L51 
 export const classExpToClassTExp = (ce: ClassExp): ClassTExp => 

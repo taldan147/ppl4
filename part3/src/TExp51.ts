@@ -148,7 +148,8 @@ export const eqTVar = (tv1: TVar, tv2: TVar): boolean => tv1.var === tv2.var;
 export const tvarContents = (tv: TVar): undefined | TExp => unbox(tv.contents);
 export const tvarSetContents = (tv: TVar, val: TExp): void =>
     setBox(tv.contents, val);
-export const tvarIsNonEmpty = (tv: TVar): boolean => tvarContents(tv) !== undefined;
+export const tvarIsNonEmpty = 
+(tv: TVar): boolean => tvarContents(tv) !== undefined;
 export const tvarDeref = (te: TExp): TExp => {
     if (! isTVar(te)) return te;
     const contents = tvarContents(te);
