@@ -299,10 +299,11 @@ export const typeofSet = (exp: A.SetExp, tenv: E.TEnv): Result<T.VoidTExp> => {
 export const typeofClass = (exp: A.ClassExp, tenv: E.TEnv): Result<T.TExp> => {
     const fieldtexp = R.map((field: A.VarDecl) => field.texp, exp.fields);
     const methodtexp = R.map((method: A.Binding) => method.var.texp, exp.methods);
-    const methodsvalTexp =   mapResult((method: A.Binding) =>typeofExp(method.val, tenv), exp.methods);
+    const extendedEnv = E.makeExtendTEnv(exp.methods.map((method) => method.var.var), exp.methods.map((method) => method.var.texp), tenv);
+    const methodsvalTexp =   mapResult((method: A.Binding) =>typeofExp(method.val, extendedEnv), exp.methods);
     const methodsConstraints = bind(methodsvalTexp, (valTexp : T.TExp[]) =>zipWithResult((method : T.TExp , methodTexp : T.TExp) => checkEqualType(method, methodTexp, exp), valTexp, methodtexp));
      
-    return bind(methodsConstraints,()=>bind(E.applyTEnv(tenv, exp.typeName.var), (type)=>makeOk(T.makeProcTExp(fieldtexp, type))));
+    return bind(methodsConstraints,()=>makeOk(T.makeProcTExp(fieldtexp, A.classExpToClassTExp (exp))));
 };
 
 
