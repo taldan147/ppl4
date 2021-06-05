@@ -473,6 +473,7 @@ const unparseClassExp = (ce: ClassExp, unparseWithTVars?: boolean): Result<strin
 
 export const parsedToClassExps = (p: Parsed): ClassExp[] => 
     isExp(p) && isDefineExp(p) && isClassExp(p.val) ? [p.val] :
+    isExp(p)  && isClassExp(p) ? [p] :
     isProgram(p) ? findAllClasses(p) :
     []; //never
 

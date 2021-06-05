@@ -210,21 +210,21 @@ describe('L5 Type Inference', () => {
     //         expect(verifyTeOfExprWithInference(program5, `T`)).to.satisfy(isFailure);
     //     });
 
-        // it('infers the type of class', () => {
-        //     expect(verifyTeOfExprWithInference("(class : c1 ((field1 : number)) ((get (lambda () : number field1))))", 
-        //                                        "(number -> (class cell (get : (Empty -> number))))")).to.deep.equal(makeOk(true));
-        // });
+        it('infers the type of class', () => {
+            expect(verifyTeOfExprWithInference("(class : c1 ((field1 : number)) ((get (lambda () : number field1))))", 
+                                               "(number -> (class cell (get : (Empty -> number))))")).to.deep.equal(makeOk(true));
+        });
 
-        // it('infers the type of a class constructor', () => {
-        //     // const program1 = 
-        //     // `(L5 (define pair (class : pair 
-        //     //                     ((f : T) 
-        //     //                      (r : T))
-        //     //                     ((first (lambda () f)) 
-        //     //                      (rest (lambda () r)))))
-        //     //      (pair 1 2)
-        //     //      pair)`;
-        //     // expect(verifyTeOfExprWithInference(program1, `(number * number -> (class pair (first : (Empty -> number)) (rest : (Empty -> number))))`)).to.deep.equal(makeOk(true));
+        it('infers the type of a class constructor', () => {
+            const program1 = 
+            `(L5 (define pair (class : pair 
+                                ((f : T) 
+                                 (r : T))
+                                ((first (lambda () f)) 
+                                 (rest (lambda () r)))))
+                 (pair 1 2)
+                 pair)`;
+            expect(verifyTeOfExprWithInference(program1, `(number * number -> (class pair (first : (Empty -> number)) (rest : (Empty -> number))))`)).to.deep.equal(makeOk(true));
 
         //     const program2 = 
         //     `(L5 (define pair (class : pair 
@@ -236,7 +236,7 @@ describe('L5 Type Inference', () => {
         //          (pair 1 2)
         //          pair)`;
         //     expect(verifyTeOfExprWithInference(program2, `(number * number -> (class pair (first : (Empty -> number)) (rest : (Empty -> number)) (scale : (number -> pair))))`)).to.deep.equal(makeOk(true));
-        // });
+        });
 
         // it('infers the type of a class with typed class define', () => {
         //     const program1 = 
@@ -314,59 +314,59 @@ describe('L5 Type Inference', () => {
           
         // });
 
-        it('infers the type of functions that receive class as parameters or return methods', () => {
-            const program5 = 
-            `(L5 (define pair (class : pair 
-                                ((f : T) 
-                                 (r : T))
-                                ((first (lambda () f)) 
-                                 (rest (lambda () r))
-                                 (scale (lambda (k) (pair (* k f) (* k r)))))))
-                 (define p12 (pair 1 2))
-                 (define f (lambda ((p : pair)) ((p 'first))))
-                 (f p12))`;
-            const expected5 = 'number';
-            expect(verifyTeOfExprWithInference(program5, expected5)).to.deep.equal(makeOk(true));
+        // it('infers the type of functions that receive class as parameters or return methods', () => {
+        //     const program5 = 
+        //     `(L5 (define pair (class : pair 
+        //                         ((f : T) 
+        //                          (r : T))
+        //                         ((first (lambda () f)) 
+        //                          (rest (lambda () r))
+        //                          (scale (lambda (k) (pair (* k f) (* k r)))))))
+        //          (define p12 (pair 1 2))
+        //          (define f (lambda ((p : pair)) ((p 'first))))
+        //          (f p12))`;
+        //     const expected5 = 'number';
+        //     expect(verifyTeOfExprWithInference(program5, expected5)).to.deep.equal(makeOk(true));
 
-            // const program6 = 
-            // `(L5 (define pair (class : pair 
-            //                     ((f : T) 
-            //                      (r : T))
-            //                     ((first (lambda () f)) 
-            //                      (rest (lambda () r))
-            //                      (scale (lambda (k) (pair (* k f) (* k r)))))))
-            //      (define p12 (pair 1 2))
-            //      (define f (lambda ((p : pair)) (p 'scale)))
-            //      (f p12))`;
-            // const expected6 = '(number -> (class pair (first : (Empty -> number)) (rest : (Empty -> number)) (scale : (number -> pair))))';
-            // expect(verifyTeOfExprWithInference(program6, expected6)).to.deep.equal(makeOk(true));
+        //     const program6 = 
+        //     `(L5 (define pair (class : pair 
+        //                         ((f : T) 
+        //                          (r : T))
+        //                         ((first (lambda () f)) 
+        //                          (rest (lambda () r))
+        //                          (scale (lambda (k) (pair (* k f) (* k r)))))))
+        //          (define p12 (pair 1 2))
+        //          (define f (lambda ((p : pair)) (p 'scale)))
+        //          (f p12))`;
+        //     const expected6 = '(number -> (class pair (first : (Empty -> number)) (rest : (Empty -> number)) (scale : (number -> pair))))';
+        //     expect(verifyTeOfExprWithInference(program6, expected6)).to.deep.equal(makeOk(true));
 
-            // const program7 = 
-            // `(L5 (define pair (class : pair 
-            //                     ((f : T) 
-            //                      (r : T))
-            //                     ((first (lambda () f)) 
-            //                      (rest (lambda () r))
-            //                      (scale (lambda (k) (pair (* k f) (* k r)))))))
-            //      (define p12 (pair 1 2))
-            //      (define f (lambda ((p : (class pair (first : (Empty -> T)) (rest : (Empty -> T)) (scale : (number -> pair))))) ((p 'first))))
-            //      f)`;
-            // const expected7 = '((class pair (first : (Empty -> T)) (rest : (Empty -> T)) (scale : (number -> pair))) -> T)';
-            // expect(verifyTeOfExprWithInference(program7, expected7)).to.deep.equal(makeOk(true));
+        //     const program7 = 
+        //     `(L5 (define pair (class : pair 
+        //                         ((f : T) 
+        //                          (r : T))
+        //                         ((first (lambda () f)) 
+        //                          (rest (lambda () r))
+        //                          (scale (lambda (k) (pair (* k f) (* k r)))))))
+        //          (define p12 (pair 1 2))
+        //          (define f (lambda ((p : (class pair (first : (Empty -> T)) (rest : (Empty -> T)) (scale : (number -> pair))))) ((p 'first))))
+        //          f)`;
+        //     const expected7 = '((class pair (first : (Empty -> T)) (rest : (Empty -> T)) (scale : (number -> pair))) -> T)';
+        //     expect(verifyTeOfExprWithInference(program7, expected7)).to.deep.equal(makeOk(true));
 
-            // const program8 = 
-            // `(L5 (define cell (class : cell ((c : T)) ((get (lambda () c)))))
-            //      (define f (lambda ((c : (class cell (get : (Empty -> T))))) ((c 'get))))
-            //      f)`;
-            // const expected8 = '((class cell (get : (Empty -> T))) -> T)';
-            // expect(verifyTeOfExprWithInference(program8, expected8)).to.deep.equal(makeOk(true));
+        //     const program8 = 
+        //     `(L5 (define cell (class : cell ((c : T)) ((get (lambda () c)))))
+        //          (define f (lambda ((c : (class cell (get : (Empty -> T))))) ((c 'get))))
+        //          f)`;
+        //     const expected8 = '((class cell (get : (Empty -> T))) -> T)';
+        //     expect(verifyTeOfExprWithInference(program8, expected8)).to.deep.equal(makeOk(true));
 
-            // const program9 = 
-            // `(L5 (define cell (class : cell ((c : T)) ((get (lambda () c)))))
-            //      (define f (lambda ((c : (class cell (get : (Empty -> T))))) (c 'get)))
-            //      f)`;
-            // const expected9 = '((class cell (get : (Empty -> T))) -> (Empty -> T))';
-            // expect(verifyTeOfExprWithInference(program9, expected9)).to.deep.equal(makeOk(true));
-        });
+        //     const program9 = 
+        //     `(L5 (define cell (class : cell ((c : T)) ((get (lambda () c)))))
+        //          (define f (lambda ((c : (class cell (get : (Empty -> T))))) (c 'get)))
+        //          f)`;
+        //     const expected9 = '((class cell (get : (Empty -> T))) -> (Empty -> T))';
+        //     expect(verifyTeOfExprWithInference(program9, expected9)).to.deep.equal(makeOk(true));
+        // });
     });
 });

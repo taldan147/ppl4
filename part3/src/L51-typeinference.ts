@@ -105,7 +105,7 @@ const checkNoOccurrence = (tvar: T.TVar, te: T.TExp, exp: A.Exp): Result<true> =
 export const makeTEnvFromClasses = (parsed: A.Parsed): E.TEnv => {
     const classes = A.parsedToClassExps(parsed);
     const classesVars = R.map((c: A.ClassExp)  => c.typeName.var, classes);
-    const classesTvars = R.map((c: A.ClassExp)  => c.typeName, classes);
+    const classesTvars = R.map((c: A.ClassExp)  => A.classExpToClassTExp(c), classes);
     return E.makeExtendTEnv(classesVars, classesTvars, E.makeEmptyTEnv());
 }
 
@@ -298,16 +298,11 @@ export const typeofSet = (exp: A.SetExp, tenv: E.TEnv): Result<T.VoidTExp> => {
 // Then type<class(type fields methods)>(tend) = = [t1 * ... * tn -> type]
 export const typeofClass = (exp: A.ClassExp, tenv: E.TEnv): Result<T.TExp> => {
     const fieldtexp = R.map((field: A.VarDecl) => field.texp, exp.fields);
-    const fieldVar = R.map((field: A.VarDecl) => field.var, exp.fields);
     const methodtexp = R.map((method: A.Binding) => method.var.texp, exp.methods);
-    const methodvar = R.map((method: A.Binding) => method.var.var, exp.methods);
-    const innitclasstype = T.makeProcTExp(fieldtexp, T.makeClassTExp(exp.typeName.var,R.zipWith((method : string, val : T.TExp) => [method, val],methodvar, methodtexp)))
-    const extendEnv = E.makeExtendTEnv(R.concat(R.concat(fieldVar, methodvar), [exp.typeName.var]), R.concat(R.concat(fieldtexp, methodtexp), [innitclasstype]), tenv);
-    const methodsvalTexp =   mapResult((method: A.Binding) =>typeofExp(method.val, extendEnv), exp.methods);
+    const methodsvalTexp =   mapResult((method: A.Binding) =>typeofExp(method.val, tenv), exp.methods);
     const methodsConstraints = bind(methodsvalTexp, (valTexp : T.TExp[]) =>zipWithResult((method : T.TExp , methodTexp : T.TExp) => checkEqualType(method, methodTexp, exp), valTexp, methodtexp));
-    
-    return bind(methodsvalTexp ,(mvTE ) => bind(methodsConstraints,()=> makeOk(T.makeProcTExp(fieldtexp, T.makeClassTExp(exp.typeName.var,R.zipWith((method : string, val : T.TExp) => [method, val],methodvar, mvTE))))));
-
+     
+    return bind(methodsConstraints,()=>bind(E.applyTEnv(tenv, exp.typeName.var), (type)=>makeOk(T.makeProcTExp(fieldtexp, type))));
 };
 
 
